@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RM11 Randomizer</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: transparent;
+  font-family: 'Segoe UI', 'Helvetica Neue', system-ui, -apple-system, sans-serif;
+}
+
+.bar-track {
+  position: relative;
+  height: 72px;
+  background: #101523;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  border-radius: 4px;
+  will-change: width;
+}
+
+.bar-fill.mode-normal {
+  background: linear-gradient(90deg, #0c48b0 0%, #1565d8 55%, #1a72f0 100%);
+}
+
+.bar-fill.mode-power {
+  background: linear-gradient(90deg, #990000 0%, #cc0000 55%, #ee1111 100%);
+}
+
+@keyframes glow-pulse {
+  0%, 100% { filter: brightness(1.0); }
+  50%       { filter: brightness(1.18); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .bar-fill.mode-power { animation: glow-pulse 1.3s ease-in-out infinite; }
+}
+
+.bar-active {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 18px;
+  pointer-events: none;
+}
+
+.weapon-icon {
+  height: 50px;
+  width: auto;
+  flex-shrink: 0;
+  margin-right: 12px;
+  filter: drop-shadow(0 1px 4px rgba(0,0,0,0.8));
+}
+
+.weapon-name {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #d8e8ff;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.95);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.bar-sep {
+  width: 1px;
+  height: 22px;
+  background: rgba(180,210,255,0.15);
+  margin: 0 14px;
+  flex-shrink: 0;
+}
+
+.gear-state {
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.gear-state.state-normal { color: #7aaae0; }
+.gear-state.state-power  { color: #ff4444; }
+
+.time-label {
+  font-size: 28px;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  color: rgb(180, 210, 255);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.bar-inactive {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  padding: 0 18px;
+}
+
+.bar-inactive span {
+  font-size: 18px;
+  color: #212d4a;
+  font-style: italic;
+  letter-spacing: 0.04em;
+}
+</style>
+</head>
+<body>
+<div class="bar-track">
+  <div class="bar-fill mode-normal" id="barFill"></div>
+
+  <div class="bar-active" id="barActive">
+    <img class="weapon-icon" id="weaponIcon" src="0.webp" alt="">
+    <span class="weapon-name" id="weaponName">—</span>
+    <div class="bar-sep"></div>
+    <span class="gear-state state-normal" id="gearState">—</span>
+    <div class="bar-sep"></div>
+    <span class="time-label" id="timeLabel">—</span>
+  </div>
+
+  <div class="bar-inactive" id="barInactive">
+    <span>— press CTRL-A to start —</span>
+  </div>
+</div>
+
+<script>
+var MAX_MS      = 10000;
+var barFill     = document.getElementById('barFill');
+var barActive   = document.getElementById('barActive');
+var barInactive = document.getElementById('barInactive');
+var weaponIcon  = document.getElementById('weaponIcon');
+var weaponName  = document.getElementById('weaponName');
+var gearState   = document.getElementById('gearState');
+var timeLabel   = document.getElementById('timeLabel');
+
+var state     = { active: false };
+var loadedAt  = 0;
+var scriptVer = 0;
+
+function reloadState() {
+  window.rmState = undefined;
+  var s = document.createElement('script');
+  s.src = 'rm11_stream.js?v=' + (++scriptVer);
+  s.onload = function() {
+    if (window.rmState !== undefined) {
+      state    = window.rmState;
+      loadedAt = performance.now();
+    }
+    s.parentNode && s.parentNode.removeChild(s);
+  };
+  s.onerror = function() {
+    s.parentNode && s.parentNode.removeChild(s);
+  };
+  document.head.appendChild(s);
+}
+
+function frame() {
+  if (!state.active) {
+    barFill.style.width       = '0';
+    barActive.style.display   = 'none';
+    barInactive.style.display = 'flex';
+  } else {
+    var elapsed   = performance.now() - loadedAt;
+    var remaining = Math.max(0, state.remaining - elapsed);
+    var pct       = (remaining / MAX_MS * 100).toFixed(2);
+    var isPower   = state.gear === 'Power Gear';
+
+    barFill.style.width       = pct + '%';
+    barFill.className         = 'bar-fill ' + (isPower ? 'mode-power' : 'mode-normal');
+    barActive.style.display   = 'flex';
+    barInactive.style.display = 'none';
+
+    weaponIcon.src            = state.icon + '.webp';
+    weaponName.textContent    = weaponNames[state.icon] || '—';
+    gearState.textContent     = state.gear;
+    gearState.className       = 'gear-state ' + (isPower ? 'state-power' : 'state-normal');
+    timeLabel.textContent     = (state.interval / 1000).toFixed(1) + ' s';
+  }
+  requestAnimationFrame(frame);
+}
+
+function getLang() {
+  var param = new URLSearchParams(location.search).get('lang');
+  if (param) return param.toLowerCase();
+  return (navigator.language || '').split('-')[0].toLowerCase() || 'en';
+}
+
+function loadScript(src, onload, onerror) {
+  var s = document.createElement('script');
+  s.src = src;
+  s.onload = onload;
+  s.onerror = onerror;
+  document.head.appendChild(s);
+}
+
+function start() {
+  setInterval(reloadState, 200);
+  reloadState();
+  requestAnimationFrame(frame);
+}
+
+var lang = getLang();
+if (lang === 'en') {
+  loadScript('weapons.js', start, start);
+} else {
+  loadScript('weapons.' + lang + '.js', start, function() {
+    loadScript('weapons.js', start, start);  // fallback to English
+  });
+}
+</script>
+</body>
+</html>

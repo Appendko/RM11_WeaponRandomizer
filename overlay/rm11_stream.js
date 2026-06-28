@@ -1,0 +1,1 @@
+window.rmState={"active":true,"gear":"Power Gear","icon":8,"interval":5000,"remaining":4409,"maximum":10000};

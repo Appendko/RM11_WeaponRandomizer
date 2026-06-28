@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="52">
+  <CheatEntries>
+    <CheatEntry>
+      <ID>21</ID>
+      <Description>"-- press CTRL-A to start --"</Description>
+      <VariableType>Byte</VariableType>
+      <Address/>
+    </CheatEntry>
+
+    <CheatEntry>
+      <ID>14</ID>
+      <Description>"Never Use Ammo"</Description>
+      <Color>0080FF</Color>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+aobscanmodule(WisponsAmmo,game.exe,85 C9 0F 4F C1 89 84 B7 78 04 00 00 48 8B 74 24 38) // should be unique
+registersymbol(WisponsAmmo)
+WisponsAmmo+5:
+  db 90 90 90 90 90 90 90
+
+[DISABLE]
+WisponsAmmo+5:
+  db 89 84 B7 78 04 00 00
+unregistersymbol(WisponsAmmo)
+</AssemblerScript>
+      <Hotkeys>
+        <Hotkey>
+          <Action>Toggle Activation</Action>
+          <Keys>
+            <Key>17</Key>
+            <Key>65</Key>
+          </Keys>
+          <Description>Toggle All</Description>
+          <ID>0</ID>
+        </Hotkey>
+      </Hotkeys>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>30</ID>
+      <Description>"=== Monitor (read-only) ==="</Description>
+      <Color>808080</Color>
+      <Options moActivateChildrenAsWell="0"/>
+      <VariableType>Byte</VariableType>
+      <Address/>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>31</ID>
+          <Description>"Weapon Slot"</Description>
+          <Color>808080</Color>
+          <DropDownList DescriptionOnly="1" DisplayValueAsItem="1">0:Mega Buster
+1:Block Dropper
+2:A.Barrier
+3:Chain Blast
+4:Scramble Thunder
+5:Bounce Ball
+6:Blazing Torch
+7:Pile Driver
+8:Tundra Storm
+</DropDownList>
+          <VariableType>4 Bytes</VariableType>
+          <Address>"game.exe"+00C3EFA8</Address>
+          <Offsets>
+            <Offset>341C</Offset>
+            <Offset>1D0</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>32</ID>
+          <Description>"Gear Type"</Description>
+          <Color>808080</Color>
+          <DropDownList DescriptionOnly="1" DisplayValueAsItem="1">0:Speed Gear
+1:Power Gear
+2:Double Gear
+3:Normal
+</DropDownList>
+          <VariableType>Byte</VariableType>
+          <Address>"game.exe"+00B87A58</Address>
+          <Offsets>
+            <Offset>4B8</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>33</ID>
+          <Description>"Gear Gauge"</Description>
+          <Color>808080</Color>
+          <VariableType>Float</VariableType>
+          <Address>"game.exe"+00B87A58</Address>
+          <Offsets>
+            <Offset>4A4</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>36</ID>
+          <Description>"Cool Down Gauge"</Description>
+          <Color>808080</Color>
+          <VariableType>Float</VariableType>
+          <Address>"game.exe"+00B87A58</Address>
+          <Offsets>
+            <Offset>4C0</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>35</ID>
+          <Description>"Charge Level"</Description>
+          <Color>808080</Color>
+          <DropDownList DescriptionOnly="1" DisplayValueAsItem="1">0:Bean
+1:Small Charge
+2:Full Charge
+3:Over Charge
+</DropDownList>
+          <VariableType>Byte</VariableType>
+          <Address>"game.exe"+00C3EFA8</Address>
+          <Offsets>
+            <Offset>35AC</Offset>
+            <Offset>1D0</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>38</ID>
+          <Description>"Charge Gauge"</Description>
+          <Color>808080</Color>
+          <VariableType>Float</VariableType>
+          <Address>"game.exe"+00C3EFA8</Address>
+          <Offsets>
+            <Offset>35A8</Offset>
+            <Offset>1D0</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>34</ID>
+          <Description>"Weapon Unlock Flags"</Description>
+          <Color>808080</Color>
+          <VariableType>2 Bytes</VariableType>
+          <Address>"game.exe"+00C3F710</Address>
+          <Offsets>
+            <Offset>3C70</Offset>
+          </Offsets>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+  </CheatEntries>
+  <UserdefinedSymbols/>
+  <LuaScript>--TRAINERGENERATORSTART--
+RequiredCEVersion=6.4
+if (getCEVersion==nil) or (getCEVersion()&lt;RequiredCEVersion) then
+  messageDialog('Please install Cheat Engine '..RequiredCEVersion, mtError, mbOK)
+  closeCE()
+end
+
+local minimum_delay =  5   -- sec
+local maximum_delay = 10   -- sec
+local minimum_weapon =  0
+local maximum_weapon =  8
+
+local weapon_names = {
+  [0] = "Mega Buster",
+  [1] = "Block Dropper",
+  [2] = "Acid Barrier",
+  [3] = "Chain Blast",
+  [4] = "Scramble Thunder",
+  [5] = "Bounce Ball",
+  [6] = "Blazing Torch",
+  [7] = "Pile Driver",
+  [8] = "Tundra Storm",
+}
+
+local addresslist        = getAddressList()
+local ammo_entry         = addresslist.getMemoryRecordByID(14)
+local status_entry       = addresslist.getMemoryRecordByID(21)
+local ammo_hotkey        = ammo_entry.getHotkeyByID(0)
+
+local t              = createTimer(nil)
+local gauge_timer    = createTimer(nil)
+local weapon         = 0
+local new_interval   = 1000
+local target_gauge   = 300.0
+local lock_charge      = false
+local autocharge_flag  = nil
+local tick_clock       = 0
+local stream_timer     = createTimer(nil)
+local stream_file      = nil  -- resolved on first activation
+
+local function resolve_stream_file()
+  if stream_file then return end
+  local path = MainForm.SaveDialog1.Filename
+  if path == "" then path = MainForm.OpenDialog1.Filename end
+  local dir = path:match("(.*\\)") or (os.getenv("TEMP") .. "\\")
+  stream_file = dir .. "overlay\\rm11_stream.js"
+end
+
+local function resolve_player_base()
+  -- Address of Charged Level, [["game.exe" + 00C3EFA8] → 1D0] → 35AC, 0:bean, 1:small charge, 2:full charge, 3: over charge
+  local base = getAddress("game.exe")
+  if base == 0 then return nil end
+  local ok, p = pcall(readInteger, base + 0x00C3EFA8)
+  if not ok or not p or p == 0 then return nil end
+  ok, p = pcall(readInteger, p + 0x1D0)
+  if not ok or not p or p == 0 then return nil end
+  return p
+end
+
+local function resolve_gear_base()
+  -- Address Gear Type:  byte,  ["game.exe"+00B87A58] → 4B8, 0: SpeedGear, 1:PowerGear, 2:DoubleGear, 3:Normal
+  -- Address Gear Gauge: float, ["game.exe"+00B87A58] → 4A4, 0.0: Empty, 300.0:Overheat.
+  local base = getAddress("game.exe")
+  if base == 0 then return nil end
+  local ok, p = pcall(readInteger, base + 0x00B87A58)
+  if not ok or not p or p == 0 then return nil end
+  return p
+end
+
+local function get_autocharge_flag()
+  if autocharge_flag then return autocharge_flag end
+  local base = getAddress("game.exe")
+  if base == 0 then return nil end
+  local ok, p = pcall(readInteger, base + 0x00C3F710)
+  if not ok or not p or p == 0 then return nil end
+  autocharge_flag = p + 0x3B11
+  return autocharge_flag
+end
+
+local function unlock_weapons()
+  local base = getAddress("game.exe")
+  if base == 0 then return end
+  local ok, p = pcall(readInteger, base + 0x00C3F710)
+  if not ok or not p or p == 0 then return end
+  writeSmallInteger(p + 0x3C70, 2047)
+  writeInteger(p + 0x3A78, 1)  -- AutoCharge chip: mark as purchased
+end
+
+local function write_stream()
+  resolve_stream_file()
+  local elapsed_ms   = (os.clock() - tick_clock) * 1000
+  local remaining_ms = math.max(0, new_interval - elapsed_ms)
+  local gear_str     = lock_charge and "Power Gear" or "Normal"
+  local js = string.format(
+    'window.rmState={"active":true,"gear":"%s","icon":%d,"interval":%d,"remaining":%d,"maximum":%d};',
+    gear_str, weapon, new_interval, math.floor(remaining_ms), maximum_delay * 1000
+  )
+  local f = io.open(stream_file, "w")
+  if f then f:write(js) f:close() end
+end
+
+local function lock_state()
+  local gear = resolve_gear_base()
+  if gear then
+    local gear_gauge  = gear + 0x4A4
+    local cooldown    = gear + 0x4C0
+    writeFloat(gear_gauge, target_gauge)
+    writeFloat(cooldown, 0.0)
+    if lock_charge then
+      writeByte(gear + 0x4B8, 1)
+    end
+  end
+  if lock_charge then
+    local player = resolve_player_base()
+    if player then
+      writeFloat(player + 0x35A8, 100.0)
+      writeByte(player + 0x35AC, 2)
+    end
+  end
+end
+
+local function randomize()
+  unlock_weapons()
+  weapon       = math.random(minimum_weapon, maximum_weapon)
+  new_interval = math.random(minimum_delay, maximum_delay) * 1000
+
+  local player      = resolve_player_base()
+  local gear        = resolve_gear_base()
+  local af          = get_autocharge_flag()
+
+  if player then
+    local weapon_slot = player + 0x341C
+    writeInteger(weapon_slot, weapon)
+  end
+
+  if math.random(1, 10) == 1 then
+    -- 10%: Power Geared
+    target_gauge = 0.0
+    lock_charge  = true
+    if gear then
+      local gear_type = gear + 0x4B8
+      writeByte(gear_type, 1)
+    end
+    if af then writeByte(af, 1) end
+  else
+    -- 90%: Normal, gauge overheated so player can't activate gear
+    target_gauge = 300.0
+    lock_charge  = false
+    if gear then
+      local gear_type = gear + 0x4B8
+      writeByte(gear_type, 3)
+    end
+    if af then writeByte(af, 0) end
+    if player then
+      local charge_level = player + 0x35AC
+      writeByte(charge_level, 0)
+    end
+  end
+
+  local gear_str = lock_charge and "Power Gear" or "Normal"
+  status_entry.Description = '"' .. weapon_names[weapon] .. ' | ' .. gear_str .. '"'
+
+  timer_setInterval(t, new_interval)
+  tick_clock = os.clock()
+end
+
+math.randomseed(os.time())
+timer_onTimer(t, randomize)
+timer_setInterval(t, new_interval)
+timer_setEnabled(t, false)
+
+timer_onTimer(gauge_timer, lock_state)
+timer_setInterval(gauge_timer, 50)
+timer_setEnabled(gauge_timer, false)
+
+timer_onTimer(stream_timer, write_stream)
+timer_setInterval(stream_timer, 200)
+timer_setEnabled(stream_timer, false)
+
+local function onPostHotkey(Hotkey)
+  local isActive = Hotkey.Owner.Active
+  if isActive then
+    resolve_stream_file()
+    timer_setEnabled(gauge_timer, true)
+    randomize()              -- sets new_interval and calls timer_setInterval(t, ...)
+    timer_setEnabled(t, true)  -- enable AFTER interval is correct
+    timer_setEnabled(stream_timer, true)
+  else
+    timer_setEnabled(t, false)
+    timer_setEnabled(gauge_timer, false)
+    timer_setEnabled(stream_timer, false)
+    lock_charge     = false
+    autocharge_flag = nil
+    local player = resolve_player_base()
+    if player then writeByte(player + 0x35AC, 0) end
+    status_entry.Description = '"-- press CTRL-A to start --"'
+    if stream_file then
+      local sf = io.open(stream_file, "w")
+      if sf then sf:write('window.rmState={"active":false};') sf:close() end
+    end
+  end
+end
+
+ammo_hotkey.onPostHotkey = onPostHotkey
+
+getAutoAttachList().add("game.exe")
+--TRAINERGENERATORSTOP--
+</LuaScript>
+</CheatTable>
