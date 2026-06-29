@@ -1,7 +1,7 @@
 # Memory Pointer Reference
 
 All runtime addresses change each session. Always dereference from the static game.exe offsets below.
-#### NOT SURE IF THIS IS CORRECT, just a memo and need to check later
+
 ---
 
 ## Player Base
@@ -57,37 +57,64 @@ See [shop_inventory.md](shop_inventory.md) for the full table. Key entries:
 | AutoCharge | `p + 0x3A78` | also used to mark chip as purchased |
 | NeoEnergyBalancer | `p + 0x3AC8` | |
 
-### Shop Item Unlock Flags
-#### NOT SURE IF THIS IS CORRECT
-`p + 0x3A44 + item_index * 8` (byte, stride 8) — written to `1` by the game during shop init for each populated slot. Does **not** directly control purchase availability.
+Formula: `p + 0x3A40 + item_index * 8` (stride 8, byte at base of each slot).
+
+### Shop Item Slot Flags
+
+`p + 0x3A44 + item_index * 8` — written to `1` by the game at `game.exe+23549F` during shop init for each populated slot. This is a separate field from the bought count (which sits at offset +0 of each slot, not +4). It does **not** control shop visibility or purchase availability.
 
 ---
 
 ## Code Patches
 
 ### Always Saturday (shop discount)
-#### From autosplit, NOT SURE IF THIS IS CORRECT
-- **Address:** `game.exe + 0xFB806`
-- **Original:** `48 C1 FA 17 48 8B C2 48 C1 E8 3F 48 03 D0`
+
+- **AOB:** `48 C1 FA 17 48 8B C2 48 C1 E8 3F 48 03 D0` (CT uses AOB scan; static location is `game.exe + 0xFB806`)
 - **Patch:** `48 33 D2 BA A9 1F 1E 6B 90 90 90 90 90 90`
 - Replaces day-of-week computation with a constant that always evaluates to Saturday.
 
-
-
 ### Never Use Ammo
+
 - **AOB:** `85 C9 0F 4F C1 89 84 B7 78 04 00 00 48 8B 74 24 38`
 - **Patch offset:** `+5`, 7 bytes → `90 90 90 90 90 90 90`
+
+### Shop Unlock — Force All Items Available
+
+Patches all 11 conditional `set` instructions to `mov al, 1` + NOP (`B0 01 90`), making every locked shop item always appear as available.
+
+| Address | Item | Original |
+|---------|------|---------|
+| `game.exe + 0x235374` | Pierce Protector | `0F 93 C0` (setae) |
+| `game.exe + 0x235380` | Bolt Catcher | `0F 95 C0` (setne) |
+| `game.exe + 0x235399` | Energy Catcher | `0F 93 C0` (setae) |
+| `game.exe + 0x2353B2` | Capsule Catcher | `0F 93 C0` (setae) |
+| `game.exe + 0x2353CB` | Buster Plus Chip | `0F 93 C0` (setae) |
+| `game.exe + 0x2353FC` | Energy Balancer Neo | `0F 95 C0` (setne) |
+| `game.exe + 0x235423` | Cooling System | `0F 93 C0` (setae) |
+| `game.exe + 0x23543C` | Awakener Chip | `0F 93 C0` (setae) |
+| `game.exe + 0x235455` | Speed Gear Booster | `0F 93 C0` (setae) |
+| `game.exe + 0x23546E` | Power Shield | `0F 93 C0` (setae) |
+| `game.exe + 0x235487` | Cooling System ∞ | `0F 93 C0` (setae) |
 
 ---
 
 ## Shop Unlock Analysis
-#### NOT SURE IF THIS IS CORRECT
+
+The shop init function spans roughly `game.exe + 0x2352C0` – `0x2354F3`.
+
 | Address | Purpose |
 |---------|---------|
-| `game.exe + 0x235490` | Loop top: `cmp [rdx], 00` / skip empty slots |
-| `game.exe + 0x23549F` | `mov [rax+rcx*8+3A44], 01` — sets item unlock flag |
-| `game.exe + 0x2353F5` | Pre-loop: computes icon display flags (not purchase gates) |
-| `[rdi + 0x4CF8 + i*3]` | Item record byte 0 — 1=available, 0=hidden; set by init then overwritten by conditions |
+| `game.exe + 0x235320` | Init loop start: sets all 26 item records byte 0 = 1 |
+| `game.exe + 0x235374` | Condition block start: 11 `set` instructions overwrite specific item records |
+| `game.exe + 0x2353E8` | Function call gating the NeoEnergyBalancer check (returns 0 → always unlock) |
+| `game.exe + 0x2353F5` | NeoEnergyBalancer condition block: reads EnergyBalancer bought count at `[r14+0x3A60]` |
+| `game.exe + 0x235490` | Loop top: `cmp [rdx], 00` — skips empty item slots |
+| `game.exe + 0x23549F` | `mov [rax+rcx*8+3A44], 01` — writes slot flag (separate from bought count) |
+| `game.exe + 0x2354C0` | Writes purchase status into item record byte 1 |
 | `game.exe + 0x2354CE` | Loop increment: `inc ebx / add rdx,3 / cmp ebx,1A / jb 235490` |
 
-The preloop check at `2353F5` reads `[r14 + 0x3A60]` (EnergyBalancer bought count) as the prerequisite gate for NeoEnergyBalancer. The other conditions compare progress counters at `p + 0x3B34 / 0x3B38 / 0x3B3C / 0x3B40` against thresholds from item config data.
+Item records table: `[rdi + 0x4CF8] + item_index * 3`
+- Byte 0: unlock slot (1 = visible in shop, 0 = hidden) — set to 1 by init loop, overwritten by condition checks
+- Byte 1: purchase status flag — written by loop body at `game.exe+2354C0`
+
+The condition checks at `235374`–`235487` read progress counters at `p + 0x3B34 / 0x3B38 / 0x3B3C / 0x3B40` and compare them against thresholds from item config data. Patching each `set` to `mov al, 1` bypasses the check unconditionally.

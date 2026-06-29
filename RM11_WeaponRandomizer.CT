@@ -37,6 +37,77 @@ unregistersymbol(WisponsAmmo)
       </Hotkeys>
     </CheatEntry>
     <CheatEntry>
+      <ID>41</ID>
+      <Description>"Unlock All Shop Items"</Description>
+      <Color>0080FF</Color>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+game.exe+235374:
+  db B0 01 90
+game.exe+235380:
+  db B0 01 90
+game.exe+235399:
+  db B0 01 90
+game.exe+2353B2:
+  db B0 01 90
+game.exe+2353CB:
+  db B0 01 90
+game.exe+2353FC:
+  db B0 01 90
+game.exe+235423:
+  db B0 01 90
+game.exe+23543C:
+  db B0 01 90
+game.exe+235455:
+  db B0 01 90
+game.exe+23546E:
+  db B0 01 90
+game.exe+235487:
+  db B0 01 90
+
+[DISABLE]
+game.exe+235374:
+  db 0F 93 C0
+game.exe+235380:
+  db 0F 95 C0
+game.exe+235399:
+  db 0F 93 C0
+game.exe+2353B2:
+  db 0F 93 C0
+game.exe+2353CB:
+  db 0F 93 C0
+game.exe+2353FC:
+  db 0F 95 C0
+game.exe+235423:
+  db 0F 93 C0
+game.exe+23543C:
+  db 0F 93 C0
+game.exe+235455:
+  db 0F 93 C0
+game.exe+23546E:
+  db 0F 93 C0
+game.exe+235487:
+  db 0F 93 C0
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>40</ID>
+      <Description>"Always Saturday (shop discount)"</Description>
+      <Color>0080FF</Color>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+aobscanmodule(ShopDiscount,game.exe,48 C1 FA 17 48 8B C2 48 C1 E8 3F 48 03 D0)
+registersymbol(ShopDiscount)
+ShopDiscount:
+  db 48 33 D2 BA A9 1F 1E 6B 90 90 90 90 90 90
+
+[DISABLE]
+ShopDiscount:
+  db 48 C1 FA 17 48 8B C2 48 C1 E8 3F 48 03 D0
+unregistersymbol(ShopDiscount)
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
       <ID>30</ID>
       <Description>"=== Monitor (read-only) ==="</Description>
       <Color>808080</Color>
@@ -167,11 +238,14 @@ local weapon_names = {
 
 local addresslist        = getAddressList()
 local ammo_entry         = addresslist.getMemoryRecordByID(14)
+local shopdiscount_entry = addresslist.getMemoryRecordByID(40)
+local shopunlock_entry   = addresslist.getMemoryRecordByID(41)
 local status_entry       = addresslist.getMemoryRecordByID(21)
 local ammo_hotkey        = ammo_entry.getHotkeyByID(0)
 
 local t              = createTimer(nil)
 local gauge_timer    = createTimer(nil)
+local shop_timer     = createTimer(nil)
 local weapon         = 0
 local new_interval   = 1000
 local target_gauge   = 300.0
@@ -227,6 +301,39 @@ local function unlock_weapons()
   if not ok or not p or p == 0 then return end
   writeSmallInteger(p + 0x3C70, 2047)
   writeInteger(p + 0x3A78, 1)  -- AutoCharge chip: mark as purchased
+end
+
+local function unlock_shop_items()
+  if not shopunlock_entry.Active then return end
+  local base = getAddress("game.exe")
+  if base == 0 then return end
+  local ok, p = pcall(readInteger, base + 0x00C3F710)
+  if not ok or not p or p == 0 then return end
+  local parts = {
+    0x3A60, -- EnergyBalancer
+    0x3A78, -- AutoCharge
+    0x3A90, -- SubTankBag (Tank Container)
+    0x3A98, -- FriendCall_upgrade (Buddy Call Plus)
+    0x3AA0, -- BoltCatcher
+    0x3AA8, -- EnergyCatcher
+    0x3AB0, -- CapsuleCatcher
+    0x3AB8, -- ShockAbsorber
+    0x3AC0, -- AdvancedBuster (Buster Plus Chip)
+    0x3AC8, -- NeoEnergyBalancer
+    0x3AD0, -- CoolingSystem
+    0x3AD8, -- FreeWeapon (Awakener Chip)
+    0x3AE0, -- SpeedgearAccelerator (Speed Gear Booster)
+    0x3AE8, -- EnergyBarrier (Power Shield)
+    0x3AF0, -- EnergyDispenser
+    0x3AF8, -- FreeGearGauge (Cooling System Infinity)
+    0x3B00, -- SpikeBoots
+    0x3B08, -- MysteriousChip
+  }
+  for _, offset in ipairs(parts) do
+    if readByte(p + offset) == 0 then
+      writeByte(p + offset, 1)
+    end
+  end
 end
 
 local function write_stream()
@@ -320,8 +427,13 @@ timer_onTimer(stream_timer, write_stream)
 timer_setInterval(stream_timer, 200)
 timer_setEnabled(stream_timer, false)
 
+timer_onTimer(shop_timer, unlock_shop_items)
+timer_setInterval(shop_timer, 1000)
+timer_setEnabled(shop_timer, true)
+
 local function onPostHotkey(Hotkey)
   local isActive = Hotkey.Owner.Active
+  shopdiscount_entry.Active = isActive
   if isActive then
     resolve_stream_file()
     timer_setEnabled(gauge_timer, true)

@@ -50,7 +50,7 @@ Condition checks overwrite the item record byte 0. Patch the `set` instruction t
 | 21 | Power Shield / パワーシールド | 300 | Take 200 total damage (100 Newcomer) | `23546E` |
 | 23 | Cooling System ∞ / クールダウンシステム∞ | 3000 | Finish the game | `235487` |
 
-All `set` instructions are 3 bytes (`0F 9x C0`); replace with `B0 01 90` (`mov al, 1` + NOP).
+All `set` instructions are 3 bytes (`0F 9x C0`); replace with `B0 01 90` (`mov al, 1` + NOP). CT entry ID=41 applies all 11 patches when enabled.
 
 **Note on Energy Balancer Neo (idx 17):** A function call at `2353E8` gates the check. If it returns 0, the item is always unlocked. If non-zero, `setne al` at `2353FC` checks EnergyBalancer bought count. Patching `2353FC` covers the gated case.
 
@@ -58,9 +58,9 @@ All `set` instructions are 3 bytes (`0F 9x C0`); replace with `B0 01 90` (`mov a
 
 ## Memory Layout Notes
 
-- Bought count stride: 8 bytes per item from `p+0x3A40`
+- Bought count stride: 8 bytes per item from `p+0x3A40` (byte at offset +0 of each slot)
+  - CT Lua timer (1 s, ID=41 active) writes `1` to 18 non-consumable parts when count is 0
 - Item record stride: 3 bytes per item from `[rdi+0x4CF8]`
-  - Byte 0: unlock slot (1 = available, 0 = hidden) — set by init loop, overwritten by conditions
+  - Byte 0: unlock slot (1 = visible in shop, 0 = hidden) — set by init loop, overwritten by conditions; patched by ID=41 AA script
   - Byte 1: purchase status flag — written by loop body at `game.exe+2354C0`
-  - Byte 2: `p + item_index*8 + 0x3A46` value — written by init loop
-- Unlock flag (separate): `p + 0x3A44 + item_index * 8` — written to `1` by game loop at `23549F`; does **not** directly control shop visibility
+- Slot flag (separate): `p + 0x3A44 + item_index * 8` — written to `1` by game loop at `23549F`; does **not** control shop visibility; distinct from the bought count at offset +0

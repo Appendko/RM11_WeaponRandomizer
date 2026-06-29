@@ -1,1 +1,4 @@
 ref/
+.claude/
+*.zip
+overlay/rm11_stream.js
