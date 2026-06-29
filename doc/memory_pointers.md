@@ -4,15 +4,41 @@ All runtime addresses change each session. Always dereference from the static ga
 
 ---
 
+## Entity Manager
+
+**Pointer:** `[game.exe + 0xC3EFA8]` = manager base (static)
+
+Known child offsets (each holds a pointer to the respective entity object):
+
+| Offset | Entity | Notes |
+|--------|--------|-------|
+| `+0x1D0` | Player object → `q` | null when not in stage |
+| `+0x238` | Unknown entity | has HP at `+0x183C`; labelled BossHP in one CT but unconfirmed — may be current target or stage enemy |
+| `+0x358` | Boss object | null when no boss loaded; used by AutoSplit for boss defeat detection |
+
+---
+
 ## Player Base
 
 **Pointer:** `[[game.exe + 0xC3EFA8] + 0x1D0]` = `q`
 
 | Field | Address | Type | Notes |
 |-------|---------|------|-------|
+| HP | `q + 0x183C` | 4 Bytes | 0 = dead |
+| State value | `q + 0x2E98` | Float | 0 = normal; non-zero = transition state (Beat rescue, and others); safe to enforce gear type only when 0 |
 | Weapon slot | `q + 0x341C` | 4 Bytes | 0–8 |
 | Charge gauge | `q + 0x35A8` | Float | continuous charge value |
 | Charge level | `q + 0x35AC` | Byte | 0=bean, 1=small, 2=full, 3=over |
+
+---
+
+## Boss Base
+
+**Pointer:** `[[game.exe + 0xC3EFA8] + 0x358]` = `b` (null when no boss loaded)
+
+| Field | Address | Type | Notes |
+|-------|---------|------|-------|
+| Boss HP | `b + 0x4628` | 4 Bytes | 0 = dead; source: AutoSplit CT |
 
 ---
 

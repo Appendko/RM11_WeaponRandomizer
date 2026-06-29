@@ -223,9 +223,10 @@ local gauge_timer    = createTimer(nil)
 local shop_timer     = createTimer(nil)
 local weapon         = 0
 local new_interval   = 1000
-local lock_charge      = false
-local autocharge_flag  = nil
-local inv_base         = nil
+local lock_charge         = false
+local autocharge_flag     = nil
+local inv_base            = nil
+local boss_suppress_until = 0
 local tick_clock       = 0
 local stream_timer     = createTimer(nil)
 local stream_file      = nil  -- resolved on first activation
@@ -245,6 +246,16 @@ local function resolve_player_base()
   local ok, p = pcall(readInteger, base + 0x00C3EFA8)
   if not ok or not p or p == 0 then return nil end
   ok, p = pcall(readInteger, p + 0x1D0)
+  if not ok or not p or p == 0 then return nil end
+  return p
+end
+
+local function resolve_boss_base()
+  local base = getAddress("game.exe")
+  if base == 0 then return nil end
+  local ok, p = pcall(readInteger, base + 0x00C3EFA8)
+  if not ok or not p or p == 0 then return nil end
+  ok, p = pcall(readInteger, p + 0x358)
   if not ok or not p or p == 0 then return nil end
   return p
 end
@@ -350,27 +361,47 @@ end
 local function lock_state()
   local p    = resolve_inv_base()
   local gear = resolve_gear_base()
+  local q    = resolve_player_base()
+
+  local player_dead = q and readInteger(q + 0x183C) == 0
+  local beat_rescue = q and readFloat(q + 0x2E98)   ~= 0
+
+  local boss = resolve_boss_base()
+  if boss then
+    if readInteger(boss + 0x4628) == 0 then
+      if boss_suppress_until == 0 then boss_suppress_until = os.clock() + 5 end
+    else
+      boss_suppress_until = 0  -- boss alive, reset
+    end
+  end
+  local boss_suppress = boss_suppress_until > 0 and os.clock() &lt; boss_suppress_until
+
   if p then
     writeByte(p + 0x3B1B, 1)  -- Awakener Chip: always active
     writeByte(p + 0x3B1F, 1)  -- Cooling System ∞: always active
     writeByte(p + 0x3B11, lock_charge and 1 or (autocharge_normal_entry.Active and 1 or 0))
   end
   if gear then
-    local gear_type_addr = gear + 0x4B8
-    local gear_type      = readByte(gear_type_addr)
     writeFloat(gear + 0x4A4, 0.0)
     writeFloat(gear + 0x4C0, 0.0)
-    if lock_charge then
-      if gear_type == 0 or gear_type == 3 then writeByte(gear_type_addr, 1) end
+    local gear_type_addr = gear + 0x4B8
+    local gear_type      = readByte(gear_type_addr)
+    if player_dead or beat_rescue then
+      if gear_type ~= 3 then writeByte(gear_type_addr, 3) end  -- force Normal
+    elseif boss_suppress then
+      -- no action: let cutscene play freely
     else
-      if gear_type == 0 or gear_type == 1 then writeByte(gear_type_addr, 3) end
+      if lock_charge then
+        if gear_type == 0 or gear_type == 3 then writeByte(gear_type_addr, 1) end
+      else
+        if gear_type == 0 or gear_type == 1 then writeByte(gear_type_addr, 3) end
+      end
     end
   end
-  if lock_charge then
-    local player = resolve_player_base()
-    if player then
-      writeFloat(player + 0x35A8, 100.0)
-      writeByte(player + 0x35AC, 2)
+  if lock_charge and not player_dead and not beat_rescue and not boss_suppress then
+    if q then
+      writeFloat(q + 0x35A8, 100.0)
+      writeByte(q + 0x35AC, 2)
     end
   end
 end
