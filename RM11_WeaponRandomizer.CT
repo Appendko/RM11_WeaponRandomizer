@@ -4,25 +4,61 @@
     <CheatEntry>
       <ID>21</ID>
       <Description>"-- press CTRL-A to start --"</Description>
-      <VariableType>Byte</VariableType>
-      <Address/>
-    </CheatEntry>
-
-    <CheatEntry>
-      <ID>14</ID>
-      <Description>"Never Use Ammo"</Description>
-      <Color>0080FF</Color>
       <VariableType>Auto Assembler Script</VariableType>
       <AssemblerScript>[ENABLE]
-aobscanmodule(WisponsAmmo,game.exe,85 C9 0F 4F C1 89 84 B7 78 04 00 00 48 8B 74 24 38) // should be unique
-registersymbol(WisponsAmmo)
-WisponsAmmo+5:
-  db 90 90 90 90 90 90 90
+aobscanmodule(ShopDiscount,game.exe,48 C1 FA 17 48 8B C2 48 C1 E8 3F 48 03 D0)
+registersymbol(ShopDiscount)
+ShopDiscount:
+  db 48 33 D2 BA A9 1F 1D 6B 90 90 90 90 90 90
+game.exe+235374:
+  db B0 01 90
+game.exe+235380:
+  db B0 01 90
+game.exe+235399:
+  db B0 01 90
+game.exe+2353B2:
+  db B0 01 90
+game.exe+2353CB:
+  db B0 01 90
+game.exe+2353FC:
+  db B0 01 90
+game.exe+235423:
+  db B0 01 90
+game.exe+23543C:
+  db B0 01 90
+game.exe+235455:
+  db B0 01 90
+game.exe+23546E:
+  db B0 01 90
+game.exe+235487:
+  db B0 01 90
 
 [DISABLE]
-WisponsAmmo+5:
-  db 89 84 B7 78 04 00 00
-unregistersymbol(WisponsAmmo)
+ShopDiscount:
+  db 48 C1 FA 17 48 8B C2 48 C1 E8 3F 48 03 D0
+unregistersymbol(ShopDiscount)
+game.exe+235374:
+  db 0F 93 C0
+game.exe+235380:
+  db 0F 95 C0
+game.exe+235399:
+  db 0F 93 C0
+game.exe+2353B2:
+  db 0F 93 C0
+game.exe+2353CB:
+  db 0F 93 C0
+game.exe+2353FC:
+  db 0F 95 C0
+game.exe+235423:
+  db 0F 93 C0
+game.exe+23543C:
+  db 0F 93 C0
+game.exe+235455:
+  db 0F 93 C0
+game.exe+23546E:
+  db 0F 93 C0
+game.exe+235487:
+  db 0F 93 C0
 </AssemblerScript>
       <Hotkeys>
         <Hotkey>
@@ -37,74 +73,15 @@ unregistersymbol(WisponsAmmo)
       </Hotkeys>
     </CheatEntry>
     <CheatEntry>
-      <ID>41</ID>
-      <Description>"Unlock All Shop Items"</Description>
+      <ID>42</ID>
+      <Description>"AutoCharge (normal weapon)"</Description>
       <Color>0080FF</Color>
+      <Active>1</Active>
       <VariableType>Auto Assembler Script</VariableType>
       <AssemblerScript>[ENABLE]
-game.exe+235374:
-  db B0 01 90
-game.exe+235380:
-  db B0 01 90
-game.exe+235399:
-  db B0 01 90
-game.exe+2353B2:
-  db B0 01 90
-game.exe+2353CB:
-  db B0 01 90
-game.exe+2353FC:
-  db B0 01 90
-game.exe+235423:
-  db B0 01 90
-game.exe+23543C:
-  db B0 01 90
-game.exe+235455:
-  db B0 01 90
-game.exe+23546E:
-  db B0 01 90
-game.exe+235487:
-  db B0 01 90
 
 [DISABLE]
-game.exe+235374:
-  db 0F 93 C0
-game.exe+235380:
-  db 0F 95 C0
-game.exe+235399:
-  db 0F 93 C0
-game.exe+2353B2:
-  db 0F 93 C0
-game.exe+2353CB:
-  db 0F 93 C0
-game.exe+2353FC:
-  db 0F 95 C0
-game.exe+235423:
-  db 0F 93 C0
-game.exe+23543C:
-  db 0F 93 C0
-game.exe+235455:
-  db 0F 93 C0
-game.exe+23546E:
-  db 0F 93 C0
-game.exe+235487:
-  db 0F 93 C0
-</AssemblerScript>
-    </CheatEntry>
-    <CheatEntry>
-      <ID>40</ID>
-      <Description>"Always Saturday (shop discount)"</Description>
-      <Color>0080FF</Color>
-      <VariableType>Auto Assembler Script</VariableType>
-      <AssemblerScript>[ENABLE]
-aobscanmodule(ShopDiscount,game.exe,48 C1 FA 17 48 8B C2 48 C1 E8 3F 48 03 D0)
-registersymbol(ShopDiscount)
-ShopDiscount:
-  db 48 33 D2 BA A9 1F 1E 6B 90 90 90 90 90 90
 
-[DISABLE]
-ShopDiscount:
-  db 48 C1 FA 17 48 8B C2 48 C1 E8 3F 48 03 D0
-unregistersymbol(ShopDiscount)
 </AssemblerScript>
     </CheatEntry>
     <CheatEntry>
@@ -237,20 +214,18 @@ local weapon_names = {
 }
 
 local addresslist        = getAddressList()
-local ammo_entry         = addresslist.getMemoryRecordByID(14)
-local shopdiscount_entry = addresslist.getMemoryRecordByID(40)
-local shopunlock_entry   = addresslist.getMemoryRecordByID(41)
-local status_entry       = addresslist.getMemoryRecordByID(21)
-local ammo_hotkey        = ammo_entry.getHotkeyByID(0)
+local autocharge_normal_entry = addresslist.getMemoryRecordByID(42)
+local status_entry            = addresslist.getMemoryRecordByID(21)
+local status_hotkey           = status_entry.getHotkeyByID(0)
 
 local t              = createTimer(nil)
 local gauge_timer    = createTimer(nil)
 local shop_timer     = createTimer(nil)
 local weapon         = 0
 local new_interval   = 1000
-local target_gauge   = 300.0
 local lock_charge      = false
 local autocharge_flag  = nil
+local inv_base         = nil
 local tick_clock       = 0
 local stream_timer     = createTimer(nil)
 local stream_file      = nil  -- resolved on first activation
@@ -284,6 +259,16 @@ local function resolve_gear_base()
   return p
 end
 
+local function resolve_inv_base()
+  if inv_base then return inv_base end
+  local base = getAddress("game.exe")
+  if base == 0 then return nil end
+  local ok, p = pcall(readInteger, base + 0x00C3F710)
+  if not ok or not p or p == 0 then return nil end
+  inv_base = p
+  return inv_base
+end
+
 local function get_autocharge_flag()
   if autocharge_flag then return autocharge_flag end
   local base = getAddress("game.exe")
@@ -304,7 +289,6 @@ local function unlock_weapons()
 end
 
 local function unlock_shop_items()
-  if not shopunlock_entry.Active then return end
   local base = getAddress("game.exe")
   if base == 0 then return end
   local ok, p = pcall(readInteger, base + 0x00C3F710)
@@ -336,6 +320,20 @@ local function unlock_shop_items()
   end
 end
 
+local function restore_consumables()
+  local p = resolve_inv_base()
+  if not p then return end
+  if resolve_player_base() then return end  -- in stage, skip
+  writeByte(p + 0x3A40, 9)  -- 1-UP
+  writeByte(p + 0x3A48, 9)  -- Energy Tank
+  writeByte(p + 0x3A50, 1)  -- Mystery Tank
+  writeByte(p + 0x3A58, 9)  -- Weapon Tank
+  writeByte(p + 0x3A68, 3)  -- Pierce Protector
+  writeByte(p + 0x3A70, 1)  -- Super Guard
+  writeByte(p + 0x3A80, 3)  -- Eddie Call
+  writeByte(p + 0x3A88, 3)  -- Beat Call
+end
+
 local function write_stream()
   resolve_stream_file()
   local elapsed_ms   = (os.clock() - tick_clock) * 1000
@@ -350,14 +348,22 @@ local function write_stream()
 end
 
 local function lock_state()
+  local p    = resolve_inv_base()
   local gear = resolve_gear_base()
+  if p then
+    writeByte(p + 0x3B1B, 1)  -- Awakener Chip: always active
+    writeByte(p + 0x3B1F, 1)  -- Cooling System ∞: always active
+    writeByte(p + 0x3B11, lock_charge and 1 or (autocharge_normal_entry.Active and 1 or 0))
+  end
   if gear then
-    local gear_gauge  = gear + 0x4A4
-    local cooldown    = gear + 0x4C0
-    writeFloat(gear_gauge, target_gauge)
-    writeFloat(cooldown, 0.0)
+    local gear_type_addr = gear + 0x4B8
+    local gear_type      = readByte(gear_type_addr)
+    writeFloat(gear + 0x4A4, 0.0)
+    writeFloat(gear + 0x4C0, 0.0)
     if lock_charge then
-      writeByte(gear + 0x4B8, 1)
+      if gear_type == 0 or gear_type == 3 then writeByte(gear_type_addr, 1) end
+    else
+      if gear_type == 0 or gear_type == 1 then writeByte(gear_type_addr, 3) end
     end
   end
   if lock_charge then
@@ -385,7 +391,6 @@ local function randomize()
 
   if math.random(1, 10) == 1 then
     -- 10%: Power Geared
-    target_gauge = 0.0
     lock_charge  = true
     if gear then
       local gear_type = gear + 0x4B8
@@ -393,14 +398,13 @@ local function randomize()
     end
     if af then writeByte(af, 1) end
   else
-    -- 90%: Normal, gauge overheated so player can't activate gear
-    target_gauge = 300.0
+    -- 90%: Normal
     lock_charge  = false
     if gear then
       local gear_type = gear + 0x4B8
       writeByte(gear_type, 3)
     end
-    if af then writeByte(af, 0) end
+    if af then writeByte(af, autocharge_normal_entry.Active and 1 or 0) end
     if player then
       local charge_level = player + 0x35AC
       writeByte(charge_level, 0)
@@ -427,13 +431,16 @@ timer_onTimer(stream_timer, write_stream)
 timer_setInterval(stream_timer, 200)
 timer_setEnabled(stream_timer, false)
 
-timer_onTimer(shop_timer, unlock_shop_items)
+local function shop_tick()
+  unlock_shop_items()
+  restore_consumables()
+end
+timer_onTimer(shop_timer, shop_tick)
 timer_setInterval(shop_timer, 1000)
 timer_setEnabled(shop_timer, true)
 
 local function onPostHotkey(Hotkey)
   local isActive = Hotkey.Owner.Active
-  shopdiscount_entry.Active = isActive
   if isActive then
     resolve_stream_file()
     timer_setEnabled(gauge_timer, true)
@@ -446,6 +453,7 @@ local function onPostHotkey(Hotkey)
     timer_setEnabled(stream_timer, false)
     lock_charge     = false
     autocharge_flag = nil
+    inv_base        = nil
     local player = resolve_player_base()
     if player then writeByte(player + 0x35AC, 0) end
     status_entry.Description = '"-- press CTRL-A to start --"'
@@ -456,7 +464,7 @@ local function onPostHotkey(Hotkey)
   end
 end
 
-ammo_hotkey.onPostHotkey = onPostHotkey
+status_hotkey.onPostHotkey = onPostHotkey
 
 getAutoAttachList().add("game.exe")
 --TRAINERGENERATORSTOP--

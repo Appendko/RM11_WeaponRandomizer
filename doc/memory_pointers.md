@@ -40,12 +40,27 @@ All runtime addresses change each session. Always dereference from the static ga
 
 ### Equipment Chip Flags
 
-Array base: `p + 0x3B10` (1 byte per chip, contiguous)
+Array base: `p + 0x3B10` (1 byte per chip, contiguous; 1 = active, 0 = inactive)
 
-| Chip | Address | Notes |
-|------|---------|-------|
-| AutoCharge (index 1) | `p + 0x3B11` | 1=enabled, 0=disabled |
-| EnergyDispenser (index 14) | `p + 0x3B1E` | 1=enabled, 0=disabled |
+| Index | Address | Item |
+|-------|---------|------|
+| 0 | `p + 0x3B10` | Energy Balancer |
+| 1 | `p + 0x3B11` | Auto-Charge Chip |
+| 2 | `p + 0x3B12` | ? (likely Pierce Protector) |
+| 3 | `p + 0x3B13` | ? (likely Buddy Call Plus) |
+| 4 | `p + 0x3B14` | Bolt Catcher |
+| 5 | `p + 0x3B15` | Energy Catcher |
+| 6 | `p + 0x3B16` | Capsule Catcher |
+| 7 | `p + 0x3B17` | Shock Absorber |
+| 8 | `p + 0x3B18` | Buster Plus Chip |
+| 9 | `p + 0x3B19` | Energy Balancer Neo |
+| 10 | `p + 0x3B1A` | Cooling System |
+| 11 | `p + 0x3B1B` | Awakener Chip |
+| 12 | `p + 0x3B1C` | Speed Gear Booster |
+| 13 | `p + 0x3B1D` | Power Shield |
+| 14 | `p + 0x3B1E` | Energy Dispenser |
+| 15 | `p + 0x3B1F` | Cooling System ∞ |
+| 16 | `p + 0x3B20` | Spike Boots |
 
 ### Shop Item Bought Counts
 
@@ -69,8 +84,8 @@ Formula: `p + 0x3A40 + item_index * 8` (stride 8, byte at base of each slot).
 
 ### Always Saturday (shop discount)
 
-- **AOB:** `48 C1 FA 17 48 8B C2 48 C1 E8 3F 48 03 D0` (CT uses AOB scan; static location is `game.exe + 0xFB806`)
-- **Patch:** `48 33 D2 BA A9 1F 1E 6B 90 90 90 90 90 90`
+- **AOB:** `48 C1 FA 17 48 8B C2 48 C1 E8 3F 48 03 D0` (CT uses AOB scan; static location is `game.exe + 0x911686`)
+- **Patch:** `48 33 D2 BA A9 1F 1D 6B 90 90 90 90 90 90`
 - Replaces day-of-week computation with a constant that always evaluates to Saturday.
 
 ### Never Use Ammo
