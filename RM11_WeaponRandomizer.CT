@@ -3,7 +3,7 @@
   <CheatEntries>
     <CheatEntry>
       <ID>21</ID>
-      <Description>"-- press CTRL-A to start --"</Description>
+      <Description>""Scramble Thunder | Normal""</Description>
       <VariableType>Auto Assembler Script</VariableType>
       <AssemblerScript>[ENABLE]
 aobscanmodule(ShopDiscount,game.exe,48 C1 FA 17 48 8B C2 48 C1 E8 3F 48 03 D0)
@@ -76,7 +76,6 @@ game.exe+235487:
       <ID>42</ID>
       <Description>"AutoCharge (normal weapon)"</Description>
       <Color>0080FF</Color>
-      <Active>1</Active>
       <VariableType>Auto Assembler Script</VariableType>
       <AssemblerScript>[ENABLE]
 
@@ -84,18 +83,16 @@ game.exe+235487:
 
 </AssemblerScript>
     </CheatEntry>
-    <CheatEntry>
+    <CheatEntry NoCheckbox="1">
       <ID>30</ID>
       <Description>"=== Monitor (read-only) ==="</Description>
       <Color>808080</Color>
-      <Options moActivateChildrenAsWell="0"/>
       <VariableType>Byte</VariableType>
       <Address/>
       <CheatEntries>
-        <CheatEntry>
+        <CheatEntry NoCheckbox="1">
           <ID>31</ID>
           <Description>"Weapon Slot"</Description>
-          <Color>808080</Color>
           <DropDownList DescriptionOnly="1" DisplayValueAsItem="1">0:Mega Buster
 1:Block Dropper
 2:A.Barrier
@@ -106,6 +103,7 @@ game.exe+235487:
 7:Pile Driver
 8:Tundra Storm
 </DropDownList>
+          <Color>808080</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>"game.exe"+00C3EFA8</Address>
           <Offsets>
@@ -113,22 +111,22 @@ game.exe+235487:
             <Offset>1D0</Offset>
           </Offsets>
         </CheatEntry>
-        <CheatEntry>
+        <CheatEntry NoCheckbox="1">
           <ID>32</ID>
           <Description>"Gear Type"</Description>
-          <Color>808080</Color>
           <DropDownList DescriptionOnly="1" DisplayValueAsItem="1">0:Speed Gear
 1:Power Gear
 2:Double Gear
 3:Normal
 </DropDownList>
+          <Color>808080</Color>
           <VariableType>Byte</VariableType>
           <Address>"game.exe"+00B87A58</Address>
           <Offsets>
             <Offset>4B8</Offset>
           </Offsets>
         </CheatEntry>
-        <CheatEntry>
+        <CheatEntry NoCheckbox="1">
           <ID>33</ID>
           <Description>"Gear Gauge"</Description>
           <Color>808080</Color>
@@ -138,7 +136,7 @@ game.exe+235487:
             <Offset>4A4</Offset>
           </Offsets>
         </CheatEntry>
-        <CheatEntry>
+        <CheatEntry NoCheckbox="1">
           <ID>36</ID>
           <Description>"Cool Down Gauge"</Description>
           <Color>808080</Color>
@@ -148,15 +146,15 @@ game.exe+235487:
             <Offset>4C0</Offset>
           </Offsets>
         </CheatEntry>
-        <CheatEntry>
+        <CheatEntry NoCheckbox="1">
           <ID>35</ID>
           <Description>"Charge Level"</Description>
-          <Color>808080</Color>
           <DropDownList DescriptionOnly="1" DisplayValueAsItem="1">0:Bean
 1:Small Charge
 2:Full Charge
 3:Over Charge
 </DropDownList>
+          <Color>808080</Color>
           <VariableType>Byte</VariableType>
           <Address>"game.exe"+00C3EFA8</Address>
           <Offsets>
@@ -164,7 +162,7 @@ game.exe+235487:
             <Offset>1D0</Offset>
           </Offsets>
         </CheatEntry>
-        <CheatEntry>
+        <CheatEntry NoCheckbox="1">
           <ID>38</ID>
           <Description>"Charge Gauge"</Description>
           <Color>808080</Color>
@@ -175,7 +173,7 @@ game.exe+235487:
             <Offset>1D0</Offset>
           </Offsets>
         </CheatEntry>
-        <CheatEntry>
+        <CheatEntry NoCheckbox="1">
           <ID>34</ID>
           <Description>"Weapon Unlock Flags"</Description>
           <Color>808080</Color>
@@ -183,6 +181,54 @@ game.exe+235487:
           <Address>"game.exe"+00C3F710</Address>
           <Offsets>
             <Offset>3C70</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry NoCheckbox="1">
+          <ID>44</ID>
+          <Description>"CurHP"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <Color>808080</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>game.exe + 0xC3EFA8</Address>
+          <Offsets>
+            <Offset>0x183C</Offset>
+            <Offset>0x1D0</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry NoCheckbox="1">
+          <ID>45</ID>
+          <Description>"Beat?"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <Color>808080</Color>
+          <VariableType>Float</VariableType>
+          <Address>game.exe + 0xC3EFA8</Address>
+          <Offsets>
+            <Offset>0x2E98</Offset>
+            <Offset>0x1D0</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry NoCheckbox="1">
+          <ID>43</ID>
+          <Description>"BossHP"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <Color>808080</Color>
+          <VariableType>2 Bytes</VariableType>
+          <Address>game.exe + 0xC3EFA8</Address>
+          <Offsets>
+            <Offset>0x4628</Offset>
+            <Offset>0x358</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry NoCheckbox="1">
+          <ID>46</ID>
+          <Description>"BossHP?"</Description>
+          <ShowAsSigned>1</ShowAsSigned>
+          <Color>808080</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>game.exe + 0xC3EFA8</Address>
+          <Offsets>
+            <Offset>0x183C</Offset>
+            <Offset>0x238</Offset>
           </Offsets>
         </CheatEntry>
       </CheatEntries>
@@ -255,7 +301,8 @@ local function resolve_boss_base()
   if base == 0 then return nil end
   local ok, p = pcall(readInteger, base + 0x00C3EFA8)
   if not ok or not p or p == 0 then return nil end
-  ok, p = pcall(readInteger, p + 0x358)
+  --ok, p = pcall(readInteger, p + 0x358)
+  ok, p = pcall(readInteger, p + 0x238)
   if not ok or not p or p == 0 then return nil end
   return p
 end
@@ -368,13 +415,14 @@ local function lock_state()
 
   local boss = resolve_boss_base()
   if boss then
-    if readInteger(boss + 0x4628) == 0 then
-      if boss_suppress_until == 0 then boss_suppress_until = os.clock() + 5 end
+    -- if readInteger(boss + 0x4628) == 0 then
+    if readInteger(boss + 0x183C, true) &lt; 1 then
+      if boss_suppress_until == 0 then boss_suppress_until = os.clock() + 10 end
     else
       boss_suppress_until = 0  -- boss alive, reset
     end
   end
-  local boss_suppress = boss_suppress_until > 0 and os.clock() &lt; boss_suppress_until
+  local boss_suppress = boss_suppress_until &gt; 0 and os.clock() &lt; boss_suppress_until
 
   if p then
     writeByte(p + 0x3B1B, 1)  -- Awakener Chip: always active
@@ -392,6 +440,7 @@ local function lock_state()
       -- no action: let cutscene play freely
     else
       if lock_charge then
+        -- if gear_type == 0 or gear_type == 3 then writeByte(gear_type_addr, 1) end
         if gear_type == 0 or gear_type == 3 then writeByte(gear_type_addr, 1) end
       else
         if gear_type == 0 or gear_type == 1 then writeByte(gear_type_addr, 3) end
