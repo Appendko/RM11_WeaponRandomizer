@@ -32,7 +32,17 @@ Known child offsets (each holds a pointer to the respective entity object):
 
 ---
 
-## Boss Base
+## Boss Base - Current
+
+**Pointer:** `[[game.exe + 0xC3EFA8] + 0x238]` = `b` (null when no boss loaded)
+
+| Field | Address | Type | Notes |
+|-------|---------|------|-------|
+| Boss HP | `b + 0x183C` | 4 Bytes, Signed | <=0 = dead; source: AutoSplit CT |
+
+---
+
+## Boss Base - Alternate
 
 **Pointer:** `[[game.exe + 0xC3EFA8] + 0x358]` = `b` (null when no boss loaded)
 
